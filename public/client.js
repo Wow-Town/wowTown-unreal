@@ -33,9 +33,8 @@ window.addEventListener('load', function() {
 
 					      
 	socket.on('LOGIN_SUCCESS', function(id,name,position) {
-	console.log("heell");
 				      		
-	var currentUserAtr = id+':'+name+':'+position;
+	  var currentUserAtr = id+':'+name+':'+position;
 	  
 	   if(window.unityInstance!=null)
 		{

@@ -1,5 +1,7 @@
-FROM nginx:stable-alpine
-COPY . /usr/share/nginx/html
-COPY ./nginx.conf /etc/nginx/conf.d/nginx.conf
-EXPOSE 3001
-CMD ["nginx", "-g", "daemon off;"]
+FROM node:14.16.0-alpine3.13
+WORKDIR /deploy
+COPY ./package*.json ./
+RUN npm i
+COPY ./* ./
+EXPOSE 3001 80
+CMD [ "node", "server.js" ]
