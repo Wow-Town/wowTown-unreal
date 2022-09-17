@@ -5,12 +5,6 @@ pipeline {
     }
     tools {nodejs "NodeJS"}
     stages {
-        stage('NPM Build') {
-            steps {
-                sh 'npm install'
-                sh 'npm run build'
-            }
-        }
         stage('Docker Image Build') {
             when{ branch "main"}
             steps {
@@ -37,7 +31,7 @@ pipeline {
                     continueOnError: false, failOnError: true,
                     publishers: [
                         sshPublisherDesc(
-                            configName: "wowtown_frontend",//Jenkins 시스템 정보에 사전 입력한 서버 ID
+                            configName: "wowtown_metaverse",//Jenkins 시스템 정보에 사전 입력한 서버 ID
                             verbose: true,
                             transfers: [
                                 sshTransfer(
