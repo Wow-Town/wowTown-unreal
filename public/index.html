@@ -20,6 +20,11 @@
         </div>
       </div>
       <div id="unity-warning"> </div>
+      <div id="unity-footer">
+        <div id="unity-webgl-logo"></div>
+        <div id="unity-fullscreen-button"></div>
+        <div id="unity-build-title">Tutorial</div>
+      </div>
     </div>
 		<script src="/socket.io/socket.io.js"></script>
 	<script src="client.js"></script>
@@ -57,11 +62,11 @@
       }
 
      var buildUrl = "Build";
-    var loaderUrl = buildUrl + "/w0w916.loader.js";
+    var loaderUrl = buildUrl + "/public.loader.js";
        var config = {
-           dataUrl: buildUrl + "/w0w916.data",
-           frameworkUrl: buildUrl + "/w0w916.framework.js",
-           codeUrl: buildUrl + "/w0w916.wasm",
+           dataUrl: buildUrl + "/public.data",
+           frameworkUrl: buildUrl + "/public.framework.js",
+           codeUrl: buildUrl + "/public.wasm",
            streamingAssetsUrl: "StreamingAssets",
            companyName: "DefaultCompany",
            productName: "WowTownWeb1",
@@ -98,6 +103,9 @@
         }).then((unityInstance) => {
           loadingBar.style.display = "none";
 		   window.unityInstance = unityInstance; // <-- this
+          fullscreenButton.onclick = () => {
+            unityInstance.SetFullscreen(1);
+          };
         }).catch((message) => {
           alert(message);
         });
