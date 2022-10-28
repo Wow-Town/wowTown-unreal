@@ -1,16 +1,25 @@
+const fs = require('fs');
+
+const options = {
+  key: fs.readFileSync('./private.pem'),
+  cert: fs.readFileSync('./public.pem')
+};
 var express  = require('express');//import express NodeJS framework module
 var app      = express();// create an object of the express module
-var http     = require('http').Server(app);// create a http web server using the http library
-var io       = require('socket.io')(http,{cors: { origin: '*' }});// import socketio communication module
+var https     = require('https').Server(options,app);// create a http web server using the http library
+var io       = require('socket.io')(https,{cors: { origin: '*' }});// import socketio communication module
 var cors =require('cors');
+
+
+
 
 const mysql = require('mysql');
 const conn = {  // mysql 접속 설정
-    host: '13.209.5.41',
+    host: '13.125.41.115',
     port: '3306',
-    user: 'unreal',
-    password: 'test123',
-    database: 'test'
+    user: 'root',
+    password: 'wowtown123',
+    database: 'wow_town'
 };  
 app.use(cors());
 app.use("/public/TemplateData",express.static(__dirname + "/public/TemplateData"));
@@ -215,7 +224,7 @@ socket.on('ANIMATION', function (_data)
 });//END_IO.ON
 
 
-http.listen(process.env.PORT ||3001, function(){
+https.listen(process.env.PORT ||3001, function(){
    console.log('listening on *:3001');
    // let connection = mysql.createConnection(conn); // DB 커넥션 생성
    // connection.connect();   // DB 접속
