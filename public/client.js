@@ -46,9 +46,9 @@ window.addEventListener('load', function() {
 	});//END_SOCKET.ON
 	
 		
-	socket.on('SPAWN_PLAYER', function(id,name,position,gwansimsa1,gwansimsa2,gwansimsa3) {
+	socket.on('SPAWN_PLAYER', function(id,name,position,code,gwansimsa1,gwansimsa2,gwansimsa3,sogaeT) {
 	
-	    var currentUserAtr = id+':'+name+':'+position+':'+gwansimsa1+':'+gwansimsa2+':'+gwansimsa3;
+	    var currentUserAtr = id+':'+name+':'+position+':'+code+':'+gwansimsa1+':'+gwansimsa2+':'+gwansimsa3+':'+sogaeT;
 		
 		if(window.unityInstance!=null)
 		{

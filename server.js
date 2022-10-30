@@ -13,12 +13,12 @@ const mysql = require('mysql');
 const cors = require('cors');
 const createApplication = require('express/lib/express');
 const { timeStamp } = require('console');
-const PORT = 3001;
+const PORT = 443;
 const conn = {  // mysql 접속 설정
-   host: '13.125.41.115',
+   host: process.env.DB_HOST,
    port: '3306',
-   user: 'root',
-   password: 'wowTown123',
+   user: process.env.DB_USER,
+   password: process.env.DB_PASS,
    database: 'wow_town',
    insecureAuth : true
 };  
@@ -94,18 +94,23 @@ io.on('connection', function(socket){
             socketID:socket.id,//fills out with the id of the socket that was open
             animation:"",
             userid:"",
+            sogaeT:"",
             email:data.name,
             gwansimsa1:"cpp",
             gwansimsa2:"cpp",
             gwansimsa3:"cpp",
-            isMute:false
+            isMute:false,
+            sp:"",
+            sp1:""
             };//new user  in clients list
 
+            console.log(conn.host);
+            console.log(conn.password);
 
             let connection = mysql.createConnection(conn); // DB 커넥션 생성
             connection.connect();   // DB 접속
             
-            let sql = "SELECT avatar.id, avatar.nick_name,type FROM avatar join user join avatar_interest on user.id=avatar.user_id and avatar_interest.avatar_id=user.id  where user.email="+"'"+data.name+"'";
+            let sql = "SELECT avatar.id, avatar.nick_name,type,description FROM avatar join user join avatar_interest on user.id=avatar.user_id and avatar_interest.avatar_id=user.id  where user.email="+"'"+data.name+"'";
             console.log(sql);
             console.log(data.email);
             connection.query(sql, function (err, results, fields) {
@@ -120,9 +125,9 @@ io.on('connection', function(socket){
                }
               
                console.log(recv.user_id);
-               currentUser.user_id=recv.user_id;
+               currentUser.userid=recv.user_id;
                currentUser.name=recv.nick_name;
-               socket.emit("LOGIN_SUCCESS",currentUser.id,currentUser.name,currentUser.position);
+               socket.emit("LOGIN_SUCCESS",currentUser.id,currentUser.name,currentUser.position,currentUser.userid);
                console.log('[INFO] player '+currentUser.name+': logged!');
                console.log('[INFO] currentUser.position '+currentUser.position);   
                console.log('[INFO] currentUser.code '+currentUser.code);
@@ -131,7 +136,10 @@ io.on('connection', function(socket){
                currentUser.gwansimsa1=results[0].type;
                currentUser.gwansimsa2=results[1].type;
                currentUser.gwansimsa3=results[2].type;
+               currentUser.sogaeT=results[0].description;
 
+               
+               console.log(currentUser.sogaeT);
                console.log(currentUser.gwansimsa1);
             //add currentUser in clients list
                clients.push(currentUser);
@@ -149,14 +157,14 @@ io.on('connection', function(socket){
                   if(i.id!=currentUser.id)
                   { 
                   //send to the client.js script
-                  socket.emit('SPAWN_PLAYER',i.id,i.name,i.position,i.code,i.gwansimsa1,i.gwansimsa2,i.gwansimsa3,i.avatarid);
+                  socket.emit('SPAWN_PLAYER',i.id,i.name,i.position,i.code,i.gwansimsa1,i.gwansimsa2,i.gwansimsa3,i.sogaeT,i.userid);
                   
                   }//END_IF
             
                });//end_forEach
                
                // spawn currentUser client on clients in broadcast
-               socket.broadcast.emit('SPAWN_PLAYER',currentUser.id,currentUser.name,currentUser.position,currentUser.code,currentUser.gwansimsa1,currentUser.gwansimsa2,currentUser.gwansimsa3,currentUser.avatarid);
+               socket.broadcast.emit('SPAWN_PLAYER',currentUser.id,currentUser.name,currentUser.position,currentUser.code,currentUser.gwansimsa1,currentUser.gwansimsa2,currentUser.gwansimsa3,currentUser.sogaeT,currentUser.userid);
             
             });
             connection.end();
@@ -275,27 +283,39 @@ io.on('connection', function(socket){
    });//END_SOCKET_ON
 
    socket.on('ADD_FRIEND',function(_data){
-      const db = async() =>{
-         let connection = await mysql.createConnection(conn); // DB 커넥션 생성
+      var data=JSON.parse(_data);
+      console.log(data.userid);
+      if(data){
+         let timestamp=+new Date();
+         timestamp = new Date().getTime();
+         console.log(data.userid);
+         var cango=false;
+         var connection = mysql.createConnection(conn); // DB 커넥션 생성
+         let sql1='select avatar_id, friend_id from avatar_friend where avatar_id='+'"'+data.userid+'" and friend_id='+'"'+data.added+'"';
+         console.log(sql1);
          connection.connect();   // DB 접속
-      
-         let sql = "INSERT into AVATAR_FRIEND(AVATAR_FRINED_STATUS, AVATAR_ID,FRIND_ID,CREATE_AT) values(REQUESTED,"+avatarid+","+Added+","+timeStamp+")";
-         
-         
-         connection.query(sql, function (err, results, fields) {
-         if (err) {
-            console.log(err);
-         }
-         let recv=results[0];
-         console.log(recv.nick_name);
-         IsSameCode=currentUser.code === recv.nick_name;
-            //console.log(IsSameCode);
-      });
-      connection.end();
+         connection.query(sql1, function (err, results, fields) {
+            if (err) {
+               console.log(err);
+            }
+            if(typeof results== "undefined" || results == null || results == ""){
+               cango =true;
+            }
+         })
+         let sql = 'INSERT into avatar_friend(avatar_friend_status, avatar_id,friend_id,create_at) values("REQUESTED",'+'"'+data.userid+'"'+","+'"'+data.added+'"'+","+'"'+timestamp+'")';
+         connection = mysql.createConnection(conn);
+         if(cango==true){
+            connection.query(sql, function (err, results, fields) {
+                  if (err) {
+                     console.log(err);
+                  }
+               });
+               connection.end();
+            }
       }
-   
-   })
-   
+   });
+
+
 });//END_IO.ON
 
 

@@ -1,6 +1,6 @@
 var express  = require('express');//import express NodeJS framework module
 var app      = express();// create an object of the express module
-var http     = require('http').Server(app);// create a http web server using the http library
+var http     = require('https').Server(options,app);// create a http web server using the http library
 var io       = require('socket.io')(http, { cors: { origin: "*" } });// import socketio communication module
 const mysql = require('mysql');
 const cors = require('cors');
