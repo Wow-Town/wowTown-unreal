@@ -105,7 +105,7 @@ io.on('connection', function(socket){
             let connection = mysql.createConnection(conn); // DB 커넥션 생성
             connection.connect();   // DB 접속
             
-            let sql = "SELECT avatar.id, avatar.nick_name FROM avatar join user on user.id=avatar.user_id where user.email ="+"'"+data.name+"'";
+            let sql = "SELECT avatar.id, avatar.nick_name,type FROM avatar join user join avatar_interest on user.id=avatar.user_id and avatar_interest.avatar_id=user.id  where user.email="+"'"+data.name+"'";
             console.log(sql);
             console.log(data.email);
             connection.query(sql, function (err, results, fields) {
@@ -113,6 +113,8 @@ io.on('connection', function(socket){
                   console.log(err);
                }
                let recv=results[0];
+               let recv1=results[1];
+               let recv2=results[2];
                if(typeof recv == "undefined" || recv == null || recv == ""){
                   return 0;
                }
@@ -126,8 +128,12 @@ io.on('connection', function(socket){
                console.log('[INFO] currentUser.code '+currentUser.code);
 
                
+               currentUser.gwansimsa1=results[0].type;
+               currentUser.gwansimsa2=results[1].type;
+               currentUser.gwansimsa3=results[2].type;
 
-               //add currentUser in clients list
+               console.log(currentUser.gwansimsa1);
+            //add currentUser in clients list
                clients.push(currentUser);
                   
                //add client in search engine
@@ -136,7 +142,6 @@ io.on('connection', function(socket){
                sockets[currentUser.id] = socket;//add curent user socket
                
                console.log('[INFO] Total players: ' + clients.length);
-               
                /*********************************************************************************************/   
                
                //spawn playrs
@@ -152,8 +157,11 @@ io.on('connection', function(socket){
                
                // spawn currentUser client on clients in broadcast
                socket.broadcast.emit('SPAWN_PLAYER',currentUser.id,currentUser.name,currentUser.position,currentUser.code,currentUser.gwansimsa1,currentUser.gwansimsa2,currentUser.gwansimsa3,currentUser.avatarid);
+            
             });
             connection.end();
+            console.log(currentUser.name);
+            console.log('end');
             
    });//END_SOCKET_ON
       
