@@ -32,23 +32,24 @@ window.addEventListener('load', function() {
 	});//END_SOCKET.ON
 
 					      
-	socket.on('LOGIN_SUCCESS', function(id,name,position) {
+	socket.on('LOGIN_SUCCESS', function(id,name,position,code,userid) {
 				      		
-	  var currentUserAtr = id+':'+name+':'+position;
-	  
-	   if(window.unityInstance!=null)
-		{
-		 
-		  window.unityInstance.SendMessage ('NetworkManager', 'OnJoinGame', currentUserAtr);
+		var currentUserAtr = id+':'+name+':'+position+':'+code+':'+userid;
 		
-		}
-	  
-	});//END_SOCKET.ON
-	
+		 if(window.unityInstance!=null)
+		  {
+		   
+			window.unityInstance.SendMessage ('NetworkManager', 'OnJoinGame', currentUserAtr);
+		  
+		  }
 		
-	socket.on('SPAWN_PLAYER', function(id,name,position,code,gwansimsa1,gwansimsa2,gwansimsa3,sogaeT) {
+	  });//END_SOCKET.ON
+	  
+		
 	
-	    var currentUserAtr = id+':'+name+':'+position+':'+code+':'+gwansimsa1+':'+gwansimsa2+':'+gwansimsa3+':'+sogaeT;
+	socket.on('SPAWN_PLAYER', function(id,name,position,code,gwansimsa1,gwansimsa2,gwansimsa3,sogaeT,userid) {
+	
+	    var currentUserAtr = id+':'+name+':'+position+':'+code+':'+gwansimsa1+':'+gwansimsa2+':'+gwansimsa3+':'+sogaeT+':'+userid;
 		
 		if(window.unityInstance!=null)
 		{
@@ -58,6 +59,7 @@ window.addEventListener('load', function() {
 		}
 		
 	});//END_SOCKET.ON
+	
 	
 
 	

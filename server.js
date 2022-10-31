@@ -81,7 +81,6 @@ io.on('connection', function(socket){
       // }
       let IsSameCode;
       console.log('[INFO] JOIN received !!! ');
-      console.log(process.env.DB_AD);
       var data = JSON.parse(_data);
 
       // fills out with the information emitted by the player in the unity
@@ -104,13 +103,10 @@ io.on('connection', function(socket){
             sp1:""
             };//new user  in clients list
 
-            console.log(conn.host);
-            console.log(conn.password);
-
             let connection = mysql.createConnection(conn); // DB 커넥션 생성
             connection.connect();   // DB 접속
             
-            let sql = "SELECT avatar.id, avatar.nick_name,type,description FROM avatar join user join avatar_interest on user.id=avatar.user_id and avatar_interest.avatar_id=user.id  where user.email="+"'"+data.name+"'";
+            let sql = "SELECT distinct avatar.id, avatar.nick_name,type,description FROM avatar join user join avatar_interest on user.id=avatar.user_id and avatar_interest.avatar_id=avatar.id  where user.email="+"'"+data.name+"'";
             console.log(sql);
             console.log(data.email);
             connection.query(sql, function (err, results, fields) {
@@ -123,20 +119,23 @@ io.on('connection', function(socket){
                if(typeof recv == "undefined" || recv == null || recv == ""){
                   return 0;
                }
-              
+               currentUser.userid=String(results[0].id);
                console.log(recv.user_id);
-               currentUser.userid=recv.user_id;
                currentUser.name=recv.nick_name;
-               socket.emit("LOGIN_SUCCESS",currentUser.id,currentUser.name,currentUser.position,currentUser.userid);
+               socket.emit("LOGIN_SUCCESS",currentUser.id,currentUser.name,currentUser.position,currentUser.code,currentUser.userid);
                console.log('[INFO] player '+currentUser.name+': logged!');
                console.log('[INFO] currentUser.position '+currentUser.position);   
                console.log('[INFO] currentUser.code '+currentUser.code);
+               console.log('[INFO] currentUser.code '+currentUser.userid);
+               
 
                
                currentUser.gwansimsa1=results[0].type;
                currentUser.gwansimsa2=results[1].type;
                currentUser.gwansimsa3=results[2].type;
                currentUser.sogaeT=results[0].description;
+               console.log(currentUser.userid);
+               console.log(typeof(currentUser.userid));
 
                
                console.log(currentUser.sogaeT);
@@ -169,6 +168,7 @@ io.on('connection', function(socket){
             });
             connection.end();
             console.log(currentUser.name);
+            console.log(currentUser.userid);
             console.log('end');
             
    });//END_SOCKET_ON
@@ -284,13 +284,19 @@ io.on('connection', function(socket){
 
    socket.on('ADD_FRIEND',function(_data){
       var data=JSON.parse(_data);
-      console.log(data.userid);
-      if(data){
-         let timestamp=+new Date();
-         timestamp = new Date().getTime();
-         console.log(data.userid);
-         var cango=false;
+      var date;
+      date = new Date();
+      date = date.getUTCFullYear() + '-' +
+         ('00' + (date.getUTCMonth()+1)).slice(-2) + '-' +
+         ('00' + date.getUTCDate()).slice(-2) + ' ' + 
+         ('00' + date.getUTCHours()).slice(-2) + ':' + 
+         ('00' + date.getUTCMinutes()).slice(-2) + ':' + 
+         ('00' + date.getUTCSeconds()).slice(-2);
+      console.log(date);
+      if (currentUser){
+      
          var connection = mysql.createConnection(conn); // DB 커넥션 생성
+         var connection1= mysql.createConnection(conn);
          let sql1='select avatar_id, friend_id from avatar_friend where avatar_id='+'"'+data.userid+'" and friend_id='+'"'+data.added+'"';
          console.log(sql1);
          connection.connect();   // DB 접속
@@ -299,19 +305,17 @@ io.on('connection', function(socket){
                console.log(err);
             }
             if(typeof results== "undefined" || results == null || results == ""){
-               cango =true;
-            }
-         })
-         let sql = 'INSERT into avatar_friend(avatar_friend_status, avatar_id,friend_id,create_at) values("REQUESTED",'+'"'+data.userid+'"'+","+'"'+data.added+'"'+","+'"'+timestamp+'")';
-         connection = mysql.createConnection(conn);
-         if(cango==true){
-            connection.query(sql, function (err, results, fields) {
+               connection1.connect();
+               let sql = 'INSERT into avatar_friend(avatar_friend_status, avatar_id,friend_id,create_at) values("REQUESTED",'+'"'+data.userid+'"'+","+'"'+data.added+'",'+'"'+date+'")';
+               connection.query(sql, function (err, results, fields) {
                   if (err) {
                      console.log(err);
                   }
                });
-               connection.end();
+            connection.end();
             }
+            recv=results[0];
+         });
       }
    });
 
