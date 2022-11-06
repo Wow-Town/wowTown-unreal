@@ -1,17 +1,26 @@
+const fs = require('fs');
+
+const options = {
+  key: fs.readFileSync('./private.pem'),
+  cert: fs.readFileSync('./public.pem')
+};
 var express  = require('express');//import express NodeJS framework module
+require('dotenv').config();
 var app      = express();// create an object of the express module
-var http     = require('https').Server(options,app);// create a http web server using the http library
-var io       = require('socket.io')(http, { cors: { origin: "*" } });// import socketio communication module
+var https     = require('https').Server(options,app);// create a http web server using the http library
+var io       = require('socket.io')(https, { cors: { origin: "*" } });// import socketio communication module
 const mysql = require('mysql');
 const cors = require('cors');
 const createApplication = require('express/lib/express');
-const PORT = 3001;
+const { timeStamp } = require('console');
+const PORT = 443;
 const conn = {  // mysql 접속 설정
-   host: 'api.wowtown.co.kr',
+   host: process.env.DB_HOST,
    port: '3306',
-   user: 'unreal',
-   password: 'test123',
-   database: 'wow_town'
+   user: process.env.DB_USER,
+   password: process.env.DB_PASS,
+   database: 'wow_town',
+   insecureAuth : true
 };  
 
 app.use("/public/TemplateData",express.static(__dirname + "/public/TemplateData"));
@@ -52,27 +61,8 @@ io.on('connection', function(socket){
    //create a callback fuction to listening EmitJoin() method in NetworkMannager.cs unity script
    socket.on('LOGIN', function (_data)
    {
-      // const db = async() =>{
-      //    let connection = await mysql.createConnection(conn); // DB 커넥션 생성
-      //    connection.connect();   // DB 접속
-      
-      //    let sql = "SELECT nick_name FROM avatar where avatar.id = 3";
-         
-         
-      //  connection.query(sql, function (err, results, fields) {
-      //    if (err) {
-      //       console.log(err);
-      //    }
-      //    let recv=results[0];
-      //    console.log(recv.nick_name);
-      //    IsSameCode=currentUser.code === recv.nick_name;
-      //    //console.log(IsSameCode);
-      // });
-      // connection.end();
-      // }
       let IsSameCode;
       console.log('[INFO] JOIN received !!! ');
-      
       var data = JSON.parse(_data);
 
       // fills out with the information emitted by the player in the unity
@@ -84,101 +74,85 @@ io.on('connection', function(socket){
             id:socket.id,//alternatively we could use socket.id
             socketID:socket.id,//fills out with the id of the socket that was open
             animation:"",
+            userid:"",
+            sogaeT:"",
+            email:data.name,
             gwansimsa1:"cpp",
             gwansimsa2:"cpp",
             gwansimsa3:"cpp",
-            isMute:false
+            isMute:false,
+            costume:""
             };//new user  in clients list
 
-            socket.emit("LOGIN_SUCCESS",currentUser.id,currentUser.name,currentUser.position);
-            console.log('[INFO] player '+currentUser.name+': logged!');
-            console.log('[INFO] currentUser.position '+currentUser.position);   
-            console.log('[INFO] currentUser.code '+currentUser.code);
-
+            let connection = mysql.createConnection(conn); // DB 커넥션 생성
+            connection.connect();   // DB 접속
             
+            let sql = "SELECT distinct avatar.id, avatar.nick_name,type,description FROM avatar join user join avatar_interest on user.id=avatar.user_id and avatar_interest.avatar_id=avatar.id  where user.email="+"'"+data.name+"'";
+            console.log(sql);
+            console.log(data.email);
+            connection.query(sql, function (err, results, fields) {
+               if (err) {
+                  console.log(err);
+               }
+               let recv=results[0];
+               let recv1=results[1];
+               let recv2=results[2];
+               if(typeof recv == "undefined" || recv == null || recv == ""){
+                  return 0;
+               }
+               currentUser.userid=String(results[0].id);
+               console.log(recv.user_id);
+               currentUser.name=recv.nick_name;
+               currentUser.costume=results[0].costume;
+               socket.emit("LOGIN_SUCCESS",currentUser.id,currentUser.name,currentUser.position,currentUser.code,currentUser.userid,currentUser.costume);
+               console.log('[INFO] player '+currentUser.name+': logged!');
+               console.log('[INFO] currentUser.position '+currentUser.position);   
+               console.log('[INFO] currentUser.code '+currentUser.code);
+               console.log('[INFO] currentUser.code '+currentUser.userid);
+               
 
+               
+               currentUser.gwansimsa1=results[0].type;
+               currentUser.gwansimsa2=results[1].type;
+               currentUser.gwansimsa3=results[2].type;
+               currentUser.sogaeT=results[0].description;
+               console.log(currentUser.userid);
+               console.log(typeof(currentUser.userid));
+
+               
+               console.log(currentUser.sogaeT);
+               console.log(currentUser.gwansimsa1);
             //add currentUser in clients list
-            clients.push(currentUser);
+               clients.push(currentUser);
+                  
+               //add client in search engine
+               clientLookup[currentUser.id] = currentUser;
                
-            //add client in search engine
-            clientLookup[currentUser.id] = currentUser;
-            
-            sockets[currentUser.id] = socket;//add curent user socket
-            
-            console.log('[INFO] Total players: ' + clients.length);
-            
-            /*********************************************************************************************/   
-            
-            //spawn playrs
-            clients.forEach( function(i) {
-               if(i.id!=currentUser.id)
-               { 
-               //send to the client.js script
-               socket.emit('SPAWN_PLAYER',i.id,i.name,i.position,i.code,i.gwansimsa1,i.gwansimsa2,i.gwansimsa3);
+               sockets[currentUser.id] = socket;//add curent user socket
                
-               }//END_IF
-         
-            });//end_forEach
-            
-            // spawn currentUser client on clients in broadcast
-            socket.broadcast.emit('SPAWN_PLAYER',currentUser.id,currentUser.name,currentUser.position,currentUser.code,currentUser.gwansimsa1,currentUser.gwansimsa2,currentUser.gwansimsa3);
-        
-      // let connection = mysql.createConnection(conn); // DB 커넥션 생성
-      // connection.connect();   // DB 접속
-      
-      //let sql = "SELECT nick_name FROM avatar where avatar.id = 3";
-         
-         
-      // connection.query(sql, function (err, results, fields) {
-      //    if (err) {
-      //       console.log(err);
-      //    }
-      //    let recv=results[0];
-      //    console.log(recv.nick_name);
-      //    IsSameCode=currentUser.code === recv.nick_name;
-      //    if(IsSameCode){
-      //       console.log(IsSameCode);
-   
-      //       // socket.emit("LOGIN_SUCCESS",currentUser.id,currentUser.name,currentUser.position);
-      //       // console.log('[INFO] player '+currentUser.name+': logged!');
-      //       // console.log('[INFO] currentUser.position '+currentUser.position);   
-      //       // console.log('[INFO] currentUser.code '+currentUser.code);
-
-            
-
-      //       // //add currentUser in clients list
-      //       // clients.push(currentUser);
+               console.log('[INFO] Total players: ' + clients.length);
+               /*********************************************************************************************/   
                
-      //       // //add client in search engine
-      //       // clientLookup[currentUser.id] = currentUser;
+               //spawn playrs
+               clients.forEach( function(i) {
+                  if(i.id!=currentUser.id)
+                  { 
+                  //send to the client.js script
+                  socket.emit('SPAWN_PLAYER',i.id,i.name,i.position,i.code,i.gwansimsa1,i.gwansimsa2,i.gwansimsa3,i.sogaeT,i.userid,i.costume);
+                  
+                  }//END_IF
             
-      //       // sockets[currentUser.id] = socket;//add curent user socket
-            
-      //       // console.log('[INFO] Total players: ' + clients.length);
-            
-      //       // /*********************************************************************************************/   
-            
-      //       // //spawn playrs
-      //       // clients.forEach( function(i) {
-      //       //    if(i.id!=currentUser.id)
-      //       //    { 
-      //       //    //send to the client.js script
-      //       //    socket.emit('SPAWN_PLAYER',i.id,i.name,i.position,i.code);
+               });//end_forEach
                
-      //       //    }//END_IF
-         
-      //       // });//end_forEach
+               // spawn currentUser client on clients in broadcast
+               socket.broadcast.emit('SPAWN_PLAYER',currentUser.id,currentUser.name,currentUser.position,currentUser.code,currentUser.gwansimsa1,currentUser.gwansimsa2,currentUser.gwansimsa3,currentUser.sogaeT,currentUser.userid,currentUser.costume);
             
-      //       // // spawn currentUser client on clients in broadcast
-      //       // socket.broadcast.emit('SPAWN_PLAYER',currentUser.id,currentUser.name,currentUser.position);
+            });
+            connection.end();
+            console.log(currentUser.name);
+            console.log(currentUser.userid);
+            console.log('end');
             
-            
-      //    }
-      // });
-      // connection.end();
-      
-
-
    });//END_SOCKET_ON
       
       
@@ -205,43 +179,6 @@ io.on('connection', function(socket){
    }
    });//END_SOCKET_ON
       
-   //    socket.on("VOICE", function (data) {
-
-
-   // if(currentUser)
-   // {
-      
-
-   //    var newData = data.split(";");
-   //    newData[0] = "data:audio/ogg;";
-   //    newData = newData[0] + newData[1];
-
-      
-   //    clients.forEach(function(u) {
-      
-   //    if(sockets[u.id]&&u.id!= currentUser.id&&!u.isMute)
-   //    {
-      
-   //       sockets[u.id].emit('UPDATE_VOICE',newData);
-   //    }
-   //    });
-      
-      
-
-   // }
-
-   // });
-
-   // socket.on("AUDIO_MUTE", function (data) {
-
-
-   // if(currentUser)
-   // {
-   // currentUser.isMute = !currentUser.isMute;
-
-   // }
-
-   // });
 
    socket.on('ANIMATION', function (_data)
       {
@@ -289,11 +226,48 @@ io.on('connection', function(socket){
       }
       
    });//END_SOCKET_ON
-   
+
+   socket.on('ADD_FRIEND',function(_data){
+      var data=JSON.parse(_data);
+      var date;
+      date = new Date();
+      date = date.getUTCFullYear() + '-' +
+         ('00' + (date.getUTCMonth()+1)).slice(-2) + '-' +
+         ('00' + date.getUTCDate()).slice(-2) + ' ' + 
+         ('00' + date.getUTCHours()).slice(-2) + ':' + 
+         ('00' + date.getUTCMinutes()).slice(-2) + ':' + 
+         ('00' + date.getUTCSeconds()).slice(-2);
+      console.log(date);
+      if (currentUser){
+      
+         var connection = mysql.createConnection(conn); // DB 커넥션 생성
+         var connection1= mysql.createConnection(conn);
+         let sql1='select avatar_id, friend_id from avatar_friend where avatar_id='+'"'+data.added+'" and friend_id='+'"'+data.userid+'"';
+         console.log(sql1);
+         connection.connect();   // DB 접속
+         connection.query(sql1, function (err, results, fields) {
+            if (err) {
+               console.log(err);
+            }
+            if(typeof results== "undefined" || results == null || results == ""){
+               connection1.connect();
+               let sql = 'INSERT into avatar_friend(avatar_friend_status, avatar_id,friend_id,create_at) values("REQUESTED",'+'"'+data.added+'"'+","+'"'+data.userid+'",'+'"'+date+'")';
+               connection.query(sql, function (err, results, fields) {
+                  if (err) {
+                     console.log(err);
+                  }
+               });
+            connection.end();
+            }
+         });
+      }
+   });
+
+
 });//END_IO.ON
 
 
-http.listen(PORT, function(){
+https.listen(PORT, function(){
    console.log('listening on *:'+PORT);
 });
 console.log("------- server is running -------");

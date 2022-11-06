@@ -32,9 +32,9 @@ window.addEventListener('load', function() {
 	});//END_SOCKET.ON
 
 					      
-	socket.on('LOGIN_SUCCESS', function(id,name,position,userid) {
+	socket.on('LOGIN_SUCCESS', function(id,name,position,userid,costume) {
 				      		
-	  var currentUserAtr = id+':'+name+':'+position+':'+userid;
+	  var currentUserAtr = id+':'+name+':'+position+':'+userid+':'+costume;
 	  
 	   if(window.unityInstance!=null)
 		{
@@ -46,9 +46,9 @@ window.addEventListener('load', function() {
 	});//END_SOCKET.ON
 	
 		
-	socket.on('SPAWN_PLAYER', function(id,name,position,code,gwansimsa1,gwansimsa2,gwansimsa3,sogaeT,userid) {
+	socket.on('SPAWN_PLAYER', function(id,name,position,code,gwansimsa1,gwansimsa2,gwansimsa3,sogaeT,userid,costume) {
 	
-	    var currentUserAtr = id+':'+name+':'+position+':'+code+':'+gwansimsa1+':'+gwansimsa2+':'+gwansimsa3+':'+sogaeT+':'+userid;
+	    var currentUserAtr = id+':'+name+':'+position+ ':'+ gwansimsa1+':'+gwansimsa2+':'+gwansimsa3+':'+sogaeT+':'+userid+':'+costume;
 		
 		if(window.unityInstance!=null)
 		{
@@ -86,8 +86,8 @@ window.addEventListener('load', function() {
 		 
 	
 	});//END_SOCKET.ON
-	
 
+	
 });//END_window_addEventListener
 
 

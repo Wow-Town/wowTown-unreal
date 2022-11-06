@@ -61,24 +61,6 @@ io.on('connection', function(socket){
    //create a callback fuction to listening EmitJoin() method in NetworkMannager.cs unity script
    socket.on('LOGIN', function (_data)
    {
-      // const db = async() =>{
-      //    let connection = await mysql.createConnection(conn); // DB 커넥션 생성
-      //    connection.connect();   // DB 접속
-      
-      //    let sql = "SELECT nick_name FROM avatar where avatar.id = 3";
-         
-         
-      //  connection.query(sql, function (err, results, fields) {
-      //    if (err) {
-      //       console.log(err);
-      //    }
-      //    let recv=results[0];
-      //    console.log(recv.nick_name);
-      //    IsSameCode=currentUser.code === recv.nick_name;
-      //    //console.log(IsSameCode);
-      // });
-      // connection.end();
-      // }
       let IsSameCode;
       console.log('[INFO] JOIN received !!! ');
       var data = JSON.parse(_data);
@@ -99,16 +81,13 @@ io.on('connection', function(socket){
             gwansimsa2:"cpp",
             gwansimsa3:"cpp",
             isMute:false,
-            sp:"",
-            sp1:""
+            costume:""
             };//new user  in clients list
 
             let connection = mysql.createConnection(conn); // DB 커넥션 생성
             connection.connect();   // DB 접속
             
-            let sql = "SELECT distinct avatar.id, avatar.nick_name,type,description FROM avatar join user join avatar_interest on user.id=avatar.user_id and avatar_interest.avatar_id=avatar.id  where user.email="+"'"+data.name+"'";
-            console.log(sql);
-            console.log(data.email);
+            let sql = "SELECT distinct avatar.id, avatar.nick_name,type,description,costume_idx FROM avatar join user join avatar_interest on user.id=avatar.user_id and avatar_interest.avatar_id=avatar.id  where user.email="+"'"+data.name+"'";
             connection.query(sql, function (err, results, fields) {
                if (err) {
                   console.log(err);
@@ -122,11 +101,12 @@ io.on('connection', function(socket){
                currentUser.userid=String(results[0].id);
                console.log(recv.user_id);
                currentUser.name=recv.nick_name;
-               socket.emit("LOGIN_SUCCESS",currentUser.id,currentUser.name,currentUser.position,currentUser.code,currentUser.userid);
+               currentUser.costume=String(results[0].costume_idx);
+               socket.emit("LOGIN_SUCCESS",currentUser.id,currentUser.name,currentUser.position,currentUser.userid,currentUser.costume);
                console.log('[INFO] player '+currentUser.name+': logged!');
                console.log('[INFO] currentUser.position '+currentUser.position);   
                console.log('[INFO] currentUser.code '+currentUser.code);
-               console.log('[INFO] currentUser.code '+currentUser.userid);
+               console.log('[INFO] currentUser.code '+currentUser.costume);
                
 
                
@@ -156,14 +136,14 @@ io.on('connection', function(socket){
                   if(i.id!=currentUser.id)
                   { 
                   //send to the client.js script
-                  socket.emit('SPAWN_PLAYER',i.id,i.name,i.position,i.code,i.gwansimsa1,i.gwansimsa2,i.gwansimsa3,i.sogaeT,i.userid);
+                  socket.emit('SPAWN_PLAYER',i.id,i.name,i.position,i.gwansimsa1,i.gwansimsa2,i.gwansimsa3,i.sogaeT,i.userid,i.costume);
                   
                   }//END_IF
             
                });//end_forEach
                
                // spawn currentUser client on clients in broadcast
-               socket.broadcast.emit('SPAWN_PLAYER',currentUser.id,currentUser.name,currentUser.position,currentUser.code,currentUser.gwansimsa1,currentUser.gwansimsa2,currentUser.gwansimsa3,currentUser.sogaeT,currentUser.userid);
+               socket.broadcast.emit('SPAWN_PLAYER',currentUser.id,currentUser.name,currentUser.position,currentUser.gwansimsa1,currentUser.gwansimsa2,currentUser.gwansimsa3,currentUser.sogaeT,currentUser.userid,currentUser.costume);
             
             });
             connection.end();
@@ -197,43 +177,6 @@ io.on('connection', function(socket){
    }
    });//END_SOCKET_ON
       
-   //    socket.on("VOICE", function (data) {
-
-
-   // if(currentUser)
-   // {
-      
-
-   //    var newData = data.split(";");
-   //    newData[0] = "data:audio/ogg;";
-   //    newData = newData[0] + newData[1];
-
-      
-   //    clients.forEach(function(u) {
-      
-   //    if(sockets[u.id]&&u.id!= currentUser.id&&!u.isMute)
-   //    {
-      
-   //       sockets[u.id].emit('UPDATE_VOICE',newData);
-   //    }
-   //    });
-      
-      
-
-   // }
-
-   // });
-
-   // socket.on("AUDIO_MUTE", function (data) {
-
-
-   // if(currentUser)
-   // {
-   // currentUser.isMute = !currentUser.isMute;
-
-   // }
-
-   // });
 
    socket.on('ANIMATION', function (_data)
       {
@@ -297,7 +240,7 @@ io.on('connection', function(socket){
       
          var connection = mysql.createConnection(conn); // DB 커넥션 생성
          var connection1= mysql.createConnection(conn);
-         let sql1='select avatar_id, friend_id from avatar_friend where avatar_id='+'"'+data.userid+'" and friend_id='+'"'+data.added+'"';
+         let sql1='select avatar_id, friend_id from avatar_friend where avatar_id='+'"'+data.added+'" and friend_id='+'"'+data.userid+'"';
          console.log(sql1);
          connection.connect();   // DB 접속
          connection.query(sql1, function (err, results, fields) {
@@ -306,7 +249,7 @@ io.on('connection', function(socket){
             }
             if(typeof results== "undefined" || results == null || results == ""){
                connection1.connect();
-               let sql = 'INSERT into avatar_friend(avatar_friend_status, avatar_id,friend_id,create_at) values("REQUESTED",'+'"'+data.userid+'"'+","+'"'+data.added+'",'+'"'+date+'")';
+               let sql = 'INSERT into avatar_friend(avatar_friend_status, avatar_id,friend_id,create_at) values("REQUESTED",'+'"'+data.added+'"'+","+'"'+data.userid+'",'+'"'+date+'")';
                connection.query(sql, function (err, results, fields) {
                   if (err) {
                      console.log(err);
@@ -314,7 +257,6 @@ io.on('connection', function(socket){
                });
             connection.end();
             }
-            recv=results[0];
          });
       }
    });
