@@ -23,6 +23,7 @@ const conn = {  // mysql 접속 설정
    insecureAuth : true
 };  
 
+var countMysqlUpdate=0;
 app.use("/public/TemplateData",express.static(__dirname + "/public/TemplateData"));
 app.use("/public/Build",express.static(__dirname + "/public/Build"));
 app.use(express.static(__dirname+'/public'));
@@ -269,3 +270,60 @@ https.listen(PORT, function(){
    console.log('listening on *:'+PORT);
 });
 console.log("------- server is running -------");
+setInterval(() => {
+   
+   var connection2 = mysql.createConnection(conn);
+   var connection3= mysql.createConnection(conn);
+   let sql='select cntupdate from avatar_change_log where id=1';
+   console.log(sql);
+   connection2.connect()
+   connection2.query(sql,function(err,results,fields){
+      if(err) {
+         console.log(err);
+         return 0;
+      }
+      console.log(results[0].cntupdate);
+      if(results[0].cntupdate != countMysqlUpdate){
+         countMysqlUpdate=results[0].cntupdate;
+         let sql1='select distinct costume_idx,user_id,type from avatar,avatar_interest where avatar_id=user_id';
+            console.log(sql1);
+            connection3.connect()
+            connection3.query(sql1,function(err,results,fields){
+               if(err){
+                  console.log(err);
+                  return 0;
+               }
+               clients.forEach(function(j){
+                  var count=0;
+                  results.forEach(function(i){
+                     if(i.user_id==j.userid){
+                        if(count==0){
+                           j.gwansimsa1=i.type;
+                           j.costume=i.costume_idx;
+                           console.log(j.gwansimsa1);
+                        }
+                        else if(count==1){
+                           j.gwansimsa2=i.type;
+                           console.log(j.gwansimsa2);
+                        }
+                        else{
+                           j.gwansimsa3=i.type;
+                           console.log(j.gwansimsa3);
+                        }
+                        count+=1;
+                     }
+                  });
+               });
+               clients.forEach( function(k) {
+                  io.emit('UPDATE_INFO',k.id,k.gwansimsa1,k.gwansimsa2,k.gwansimsa3,k.costume);
+                  console.log(k.costume);
+                  console.log(k.gwansimsa1);
+                  console.log(k.gwansimsa2);
+                  console.log(k.gwansimsa3);
+            })
+            connection3.end();
+         });//end_forEach
+      }   
+   })
+   connection2.end();
+}, 20000);

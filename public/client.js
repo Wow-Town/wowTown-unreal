@@ -84,8 +84,15 @@ window.addEventListener('load', function() {
 		
 		}
 		 
-	
 	});//END_SOCKET.ON
+
+	socket.on('UPDATE_INFO',function(id,gwansimsa1,gwansimsa2,gwansimsa3,costume_idx){
+		var currentUserAtr = id+':'+gwansimsa1+':'+gwansimsa2+':'+gwansimsa3+':'+costume_idx;
+		if(window.unityInstance!=null){
+			window.unityInstance.SendMessage ('NetworkManager', 'UpdateInfo',currentUserAtr);
+		}
+
+	});
 
 	
 });//END_window_addEventListener

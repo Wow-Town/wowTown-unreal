@@ -46,9 +46,9 @@ window.addEventListener('load', function() {
 	});//END_SOCKET.ON
 	
 		
-	socket.on('SPAWN_PLAYER', function(id,name,position,code,gwansimsa1,gwansimsa2,gwansimsa3,sogaeT,userid,costume) {
+	socket.on('SPAWN_PLAYER', function(id,name,position,gwansimsa1,gwansimsa2,gwansimsa3,sogaeT,userid,costume) {
 	
-	    var currentUserAtr = id+':'+name+':'+position+ ':'+ gwansimsa1+':'+gwansimsa2+':'+gwansimsa3+':'+sogaeT+':'+userid+':'+costume;
+	    var currentUserAtr = id+':'+name+':'+position+':'+gwansimsa1+':'+gwansimsa2+':'+gwansimsa3+':'+sogaeT+':'+userid+':'+costume;
 		
 		if(window.unityInstance!=null)
 		{
@@ -84,8 +84,15 @@ window.addEventListener('load', function() {
 		
 		}
 		 
-	
 	});//END_SOCKET.ON
+
+	socket.on('UPDATE_INFO',function(id,gwansimsa1,gwansimsa2,gwansimsa3,costume_idx){
+		var currentUserAtr = id+':'+gwansimsa1+':'+gwansimsa2+':'+gwansimsa3+':'+costume_idx;
+		if(window.unityInstance!=null){
+			window.unityInstance.SendMessage ('NetworkManager', 'UpdateInfo',currentUserAtr);
+		}
+
+	});
 
 	
 });//END_window_addEventListener
