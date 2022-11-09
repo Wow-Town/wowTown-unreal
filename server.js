@@ -285,7 +285,7 @@ setInterval(() => {
       console.log(results[0].cntupdate);
       if(results[0].cntupdate != countMysqlUpdate){
          countMysqlUpdate=results[0].cntupdate;
-         let sql1='select distinct costume_idx,user_id,type from avatar,avatar_interest where avatar_id=user_id';
+         let sql1='select distinct costume_idx,avatar_id,type,description from avatar,avatar_interest where avatar.id=avatar_id';
             console.log(sql1);
             connection3.connect()
             connection3.query(sql1,function(err,results,fields){
@@ -296,10 +296,11 @@ setInterval(() => {
                clients.forEach(function(j){
                   var count=0;
                   results.forEach(function(i){
-                     if(i.user_id==j.userid){
+                     if(i.avatar_id==j.userid){
                         if(count==0){
                            j.gwansimsa1=i.type;
                            j.costume=i.costume_idx;
+                           j.sogaeT=i.description;
                            console.log(j.gwansimsa1);
                         }
                         else if(count==1){
@@ -315,7 +316,7 @@ setInterval(() => {
                   });
                });
                clients.forEach( function(k) {
-                  io.emit('UPDATE_INFO',k.id,k.gwansimsa1,k.gwansimsa2,k.gwansimsa3,k.costume);
+                  io.emit('UPDATE_INFO',k.id,k.gwansimsa1,k.gwansimsa2,k.gwansimsa3,k.costume,k.sogaeT);
                   console.log(k.costume);
                   console.log(k.gwansimsa1);
                   console.log(k.gwansimsa2);
@@ -326,4 +327,4 @@ setInterval(() => {
       }   
    })
    connection2.end();
-}, 20000);
+}, 10000);
