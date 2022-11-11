@@ -226,6 +226,14 @@ io.on('connection', function(socket){
       
    });//END_SOCKET_ON
 
+   socket.on('SENDMSG',function(data){
+      var data=JSON.parse(data);
+      console.log(data.local_player_id);
+      console.log(data.msg);
+      console.log(currentUser.id);
+      socket.broadcast.emit('RECVMSG',data.local_player_id,data.msg);
+   })
+
    socket.on('ADD_FRIEND',function(_data){
       var data=JSON.parse(_data);
       var date;
