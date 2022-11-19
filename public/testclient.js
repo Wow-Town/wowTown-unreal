@@ -94,6 +94,12 @@ window.addEventListener('load', function() {
 
 	});
 
+	socket.on('RECVMSG', function(id,msg){
+		var currentUserAtr=id+':'+msg;
+		if(window.unityInstance!=null){
+			window.unityInstance.SendMessage ('NetworkManager', 'Receivemsg',currentUserAtr);
+		}
+	});
 	
 });//END_window_addEventListener
 
