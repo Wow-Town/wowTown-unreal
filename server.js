@@ -84,11 +84,11 @@ io.on('connection', function(socket){
             isMute:false,
             costume:""
             };//new user  in clients list
-
+            currentUser.code=data.code
             let connection = mysql.createConnection(conn); // DB 커넥션 생성
             connection.connect();   // DB 접속
             
-            let sql = "SELECT distinct avatar.id, avatar.nick_name,type,description,costume_idx FROM avatar join user join avatar_interest on user.id=avatar.user_id and avatar_interest.avatar_id=avatar.id  where user.email="+"'"+data.name+"'";
+            let sql = "SELECT distinct avatar.id,invite_code, avatar.nick_name,type,description,costume_idx FROM avatar join user join avatar_interest on user.id=avatar.user_id and avatar_interest.avatar_id=avatar.id  where user.email="+"'"+data.name+"'";
             connection.query(sql, function (err, results, fields) {
                if (err) {
                   console.log(err);
@@ -96,7 +96,7 @@ io.on('connection', function(socket){
                let recv=results[0];
                let recv1=results[1];
                let recv2=results[2];
-               if(typeof recv == "undefined" || recv == null || recv == ""){
+               if(typeof recv == "undefined" || recv == null || recv == "" ||recv.invite_code != currentUser.code){
                   return 0;
                }
                currentUser.userid=String(results[0].id);
