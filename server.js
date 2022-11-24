@@ -81,7 +81,7 @@ io.on('connection', function(socket){
             gwansimsa1:"cpp",
             gwansimsa2:"cpp",
             gwansimsa3:"cpp",
-            isMute:false,
+            islogged:false,
             costume:""
             };//new user  in clients list
             currentUser.code=data.code
@@ -96,9 +96,11 @@ io.on('connection', function(socket){
                let recv=results[0];
                let recv1=results[1];
                let recv2=results[2];
+               
                if(typeof recv == "undefined" || recv == null || recv == "" ||recv.invite_code != currentUser.code){
                   return 0;
                }
+               currentUser.islogged=true;
                currentUser.userid=String(results[0].id);
                console.log(recv.user_id);
                currentUser.name=recv.nick_name;
